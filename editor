@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>Editor</title>
+
+  <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script> -->
+  <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+ <!--  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script> -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+  <style type="text/css" media="screen">
+    body {
+        overflow: hidden;
+        background: black;
+
+    }
+    label,span{
+      color: white;
+    }
+    textarea{
+      background: black;
+      color: white;
+      font-size: 12px;
+    }
+    #editor {
+        margin: 0;
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 400px;
+
+    }
+    .edi{
+      padding-top: 10px;
+    }
+   .c2{
+    padding-top: 410px;
+   }
+   #input-area{
+    width: 100px;
+   }
+   #input{
+    resize: none;
+   }
+   #output{
+    resize: none;
+   }
+  </style>
+</head>
+<body>
+
+<div class="container edi">
+  <div class="row">
+    <div class="col-md-12">
+      <div id="editor">/* Username: shashi_codes
+      Date:
+      Time:*/
+      </div>
+    </div>
+        
+  </div>
+
+</div>
+
+<div class="container c2">
+  <div class="row">
+    <div class="col-md-4">
+      <label> <b>Input Area</b></label>
+      <div id="input-area">
+        <textarea rows="6" cols="40" style="border:solid 2px grey;" id="input"></textarea>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <label> <b>Output Area</b></label>
+      <div id="input-area">
+        <textarea rows="6" cols="40" style="border:solid 2px grey;" id="output" disabled></textarea>
+      </div>
+    </div>
+
+    <div class="col-md-4 controls">
+      <label><b>Controls</b></label>
+      <form onsubmit="return false">
+        <div class="input-group mb-3">
+          <div class="input-group-prepend">
+            <label class="input-group-text" for="lang">Language</label>
+          </div>
+          <select class="custom-select" id="lang">
+            <option value="java">Java</option>
+            <option value="cpp">C++</option>
+            <option value="c">C</option>
+            <option value="py">Python</option>
+          </select>
+      </div>
+
+      <input class="btn btn-primary" type="submit" value="Compile & Execute" id="submit">
+      </form>
+      <br>
+      <span><i>Developed by: Shashikant Shaw</i></span>
+    </div>
+
+
+  </div>
+</div>
+
+
+<script src="src-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
+
+<script type="text/javascript">
+
+  $("#lang").click(function(){
+  // action goes here!!
+  var lang=$("#lang").val();
+  if(lang=="java"){
+    var editor = ace.edit("editor");
+    editor.setTheme("ace/theme/twilight");
+    editor.session.setMode("ace/mode/java");
+  }
+  else if(lang=="c"||lang=="cpp"){
+    //alert(lang);
+    var editor = ace.edit("editor");
+    editor.setTheme("ace/theme/twilight");
+    editor.session.setMode("ace/mode/c_cpp");
+  }
+
+  else if(lang=="py"){
+    //alert(lang);
+    var editor = ace.edit("editor");
+    editor.setTheme("ace/theme/twilight");
+    editor.session.setMode("ace/mode/python");
+  }
+
+  });
+
+
+  
+</script>
+<script>
+   var editor = ace.edit("editor");
+   $( document ).ready(function() {
+    
+    editor.setTheme("ace/theme/twilight");
+    editor.session.setMode("ace/mode/java");
+    //alert("Worked");
+    $.ajax({
+              type: "POST",
+              url: 'load.php',
+              success: function(response)
+              {   
+                  //alert(response.code);
+                  var data=JSON.parse(response);
+                  editor.setValue(data.code,1);
+                  $("#input").val(data.input);
+              }
+         });   
+});
+
+
+$("#submit").click(function(){
+    var lang=$("#lang").val();
+    var program=editor.getSession().getValue();
+    var input=$("#input").val();
+    $("#submit").attr("disabled", true);
+    //var query = document.querySelector('pre').innerHTML; //Ye line important hai beta, isko alert karna bht kuch samajh me aa jayega.
+    //e.preventDefault();
+    $.ajax({
+              type: "POST",
+              url: 'compile.php',
+              data: {'lang':lang,'code':program,'input':input},
+              success: function(response)
+              {
+                  var jsonData = JSON.parse(response);
+   
+                  // user is logged in successfully in the back-end
+                  // let's redirect
+                  // alert("hi");
+                  if (jsonData.success == "1")
+                  {
+                      document.getElementById("output").innerHTML=jsonData.output;
+                      //document.getElementById("time").innerHTML="<b>Time Taken : </b>"+jsonData.time+" seconds";
+                      
+                  }
+                  if(jsonData.success=="0")
+                  {   
+                      // alert(jsonData.cstatus);
+                      document.getElementById("output").innerHTML=jsonData.cstatus;
+                  }
+             }
+         });
+    $("#submit").attr("disabled", false);
+});
+
+</script>
+
+
+<script type="text/javascript">
+  window.setInterval(function(){
+  /// call your function here
+  save();
+}, 1000);
+
+function save(){
+  var program=editor.getSession().getValue();
+  //alert(program);
+  $.ajax({
+              type: "POST",
+              url: 'save.php',
+              data: {'code':program},
+              success: function(response)
+              {
+                  //nothing
+              }
+         });
+}
+</script>
+
+</body>
+</html>
